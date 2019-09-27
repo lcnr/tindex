@@ -6,6 +6,7 @@ use std::{
     slice::{Iter, IterMut},
     vec::IntoIter,
     cmp::{PartialEq, Eq},
+    borrow::{Borrow, ToOwned, BorrowMut},
 };
 
 pub mod slice_index;
@@ -25,6 +26,14 @@ pub struct TSlice<I, T> {
 impl<I, T: fmt::Debug> fmt::Debug for TSlice<I, T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_list().entries(self.inner.iter()).finish()
+    }
+}
+
+ impl<I, T: Clone> ToOwned for TSlice<I, T> {
+    type Owned = TVec<I, T>;
+
+    fn to_owned(&self) -> Self::Owned {
+        self.inner.to_vec().into()
     }
 }
 
@@ -142,6 +151,18 @@ macro_rules! tvec {
 impl<I, T: fmt::Debug> fmt::Debug for TVec<I, T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_list().entries(self.inner.iter()).finish()
+    }
+}
+
+impl<I, T> Borrow<TSlice<I, T>> for TVec<I, T> {
+    fn borrow(&self) -> &TSlice<I, T> {
+        self.as_ref()
+    }
+}
+
+impl<I, T> BorrowMut<TSlice<I, T>> for TVec<I, T> {
+    fn borrow_mut(&mut self) -> &mut TSlice<I, T> {
+        self.as_mut()
     }
 }
 
