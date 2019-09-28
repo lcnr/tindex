@@ -218,6 +218,10 @@ impl<I: TIndex, T> TVec<I, T> {
         self.inner.remove(id.as_index())
     }
 
+    pub fn split_off(&mut self, at: I) -> Self {
+        self.inner.split_off(at.as_index()).into()
+    }
+
     pub fn last_id(&self) -> Option<I> {
         if self.inner.is_empty() {
             None
