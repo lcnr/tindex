@@ -205,6 +205,10 @@ impl<I, T> TVec<I, T> {
     pub fn pop(&mut self) -> Option<T> {
         self.inner.pop()
     }
+
+    pub fn append(&mut self, other: &mut Self) {
+        self.inner.append(&mut other.inner)
+    }
 }
 
 impl<I: TIndex, T> TVec<I, T> {
