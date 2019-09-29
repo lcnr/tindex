@@ -6,6 +6,7 @@ type Frame = u64;
 
 const FRAME_SIZE: usize = mem::size_of::<Frame>() * 8;
 
+#[derive(Hash)]
 pub struct TBitSet<I> {
     _marker: PhantomData<fn(I)>,
     inner: Vec<Frame>,
