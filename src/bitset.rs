@@ -1,0 +1,114 @@
+use std::{marker::PhantomData, mem};
+
+use crate::TIndex;
+
+type Frame = u64;
+
+const FRAME_SIZE: usize = mem::size_of::<Frame>() * 8;
+
+pub struct TBitSet<I> {
+    _marker: PhantomData<fn(I)>,
+    inner: Vec<Frame>,
+}
+
+impl<I> TBitSet<I> {
+    pub fn new() -> Self {
+        Self {
+            _marker: PhantomData,
+            inner: Vec::new(),
+        }
+    }
+
+    pub fn frame_count(&self) -> usize {
+        self.inner.len()
+    }
+
+    pub fn shrink_to_fit(&mut self) {
+        while self.inner.last().map_or(false, |&l| l == 0) {
+            self.inner.pop();
+        }
+    }
+}
+
+impl<I: TIndex> TBitSet<I> {
+    pub fn set(&mut self, idx: I, value: bool) {
+        let idx = idx.as_index();
+        let frame_offset = idx / FRAME_SIZE;
+        if frame_offset >= self.inner.len() {
+            if value {
+                self.inner.resize(frame_offset + 1, 0);
+                self.inner[frame_offset] |= 1 << idx - frame_offset * FRAME_SIZE;
+            }
+        } else {
+            if value {
+                self.inner[frame_offset] |= 1 << idx - frame_offset * FRAME_SIZE;
+            } else {
+                self.inner[frame_offset] &= !(1 << idx - frame_offset * FRAME_SIZE);
+            }
+        }
+    }
+
+    pub fn add(&mut self, idx: I) {
+        self.set(idx, true)
+    }
+
+    pub fn remove(&mut self, idx: I) {
+        self.set(idx, false)
+    }
+
+    pub fn flip(&mut self, idx: I) {
+        let idx = idx.as_index();
+        let frame_offset = idx / FRAME_SIZE;
+        if frame_offset >= self.inner.len() {
+            self.inner.resize(frame_offset + 1, 0);
+        }
+
+        self.inner[frame_offset] ^= 1 << idx - frame_offset * FRAME_SIZE;
+    }
+
+    pub fn get(&self, idx: I) -> bool {
+        let idx = idx.as_index();
+        let frame_offset = idx / FRAME_SIZE;
+        self.inner
+            .get(frame_offset)
+            .map_or(false, |v| v & (1 << idx - frame_offset * FRAME_SIZE) != 0)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test() {
+        let mut set = TBitSet::new();
+        assert_eq!(set.get(1000000), false);
+        assert_eq!(set.frame_count(), 0);
+        set.add(3);
+        assert_eq!(set.frame_count(), 1);
+        assert_eq!(set.get(3), true);
+        assert_eq!(set.get(4), false);
+        set.add(5);
+        assert_eq!(set.get(5), true);
+        set.add(FRAME_SIZE + 2);
+        assert_eq!(set.frame_count(), 2);
+        assert_eq!(set.get(FRAME_SIZE + 2), true);
+        assert_eq!(set.get(FRAME_SIZE + 1), false);
+        set.flip(FRAME_SIZE + 4);
+        assert_eq!(set.get(FRAME_SIZE), false);
+        assert_eq!(set.get(FRAME_SIZE + 2), true);
+        assert_eq!(set.get(FRAME_SIZE + 4), true);
+        set.flip(FRAME_SIZE + 4);
+        assert_eq!(set.get(FRAME_SIZE + 4), false);
+        set.flip(FRAME_SIZE * 2 + 1);
+        assert_eq!(set.frame_count(), 3);
+        assert_eq!(set.get(FRAME_SIZE * 2 + 1), true);
+        assert_eq!(set.get(FRAME_SIZE * 2 + 3), false);
+        set.remove(FRAME_SIZE * 2 + 1);
+        assert_eq!(set.get(FRAME_SIZE * 2 + 1), false);
+        set.remove(FRAME_SIZE * 2 + 1);
+        assert_eq!(set.get(FRAME_SIZE * 2 + 1), false);
+        set.remove(FRAME_SIZE * 100);
+        assert_eq!(set.frame_count(), 3);
+    }
+}

@@ -1,20 +1,27 @@
 use std::{
+    borrow::{Borrow, BorrowMut, ToOwned},
+    cmp::{Eq, PartialEq},
     fmt,
     iter::FromIterator,
     marker::PhantomData,
     ops::{Deref, DerefMut, Index, IndexMut},
     slice::{Iter, IterMut},
     vec::IntoIter,
-    cmp::{PartialEq, Eq},
-    borrow::{Borrow, ToOwned, BorrowMut},
 };
 
+pub mod bitset;
 pub mod slice_index;
 
 use slice_index::TSliceIndex;
 
 pub trait TIndex: From<usize> {
     fn as_index(self) -> usize;
+}
+
+impl TIndex for usize {
+    fn as_index(self) -> usize {
+        self
+    }
 }
 
 #[repr(transparent)]
@@ -29,7 +36,7 @@ impl<I, T: fmt::Debug> fmt::Debug for TSlice<I, T> {
     }
 }
 
- impl<I, T: Clone> ToOwned for TSlice<I, T> {
+impl<I, T: Clone> ToOwned for TSlice<I, T> {
     type Owned = TVec<I, T>;
 
     fn to_owned(&self) -> Self::Owned {
@@ -47,7 +54,7 @@ impl<I, T: PartialEq> PartialEq for TSlice<I, T> {
     }
 }
 
-impl<I, T: Eq> Eq for TSlice<I, T> { }
+impl<I, T: Eq> Eq for TSlice<I, T> {}
 
 impl<I, T> TSlice<I, T> {
     pub fn len(&self) -> usize {
@@ -185,7 +192,7 @@ impl<I, T: PartialEq> PartialEq for TVec<I, T> {
     }
 }
 
-impl<I, T: Eq> Eq for TVec<I, T> { }
+impl<I, T: Eq> Eq for TVec<I, T> {}
 
 impl<I, T> TVec<I, T> {
     pub fn new() -> Self {
