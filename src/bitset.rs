@@ -1,4 +1,4 @@
-use std::{marker::PhantomData, mem};
+use std::{fmt, marker::PhantomData, mem};
 
 use crate::TIndex;
 
@@ -9,6 +9,27 @@ const FRAME_SIZE: usize = mem::size_of::<Frame>() * 8;
 pub struct TBitSet<I> {
     _marker: PhantomData<fn(I)>,
     inner: Vec<Frame>,
+}
+
+impl<I> fmt::Debug for TBitSet<I> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_list()
+            .entries(self.inner.iter().map(|frame| format!("{:#b}", frame)))
+            .finish()
+    }
+}
+
+impl<I> Clone for TBitSet<I> {
+    fn clone(&self) -> Self {
+        Self {
+            _marker: PhantomData,
+            inner: self.inner.clone(),
+        }
+    }
+
+    fn clone_from(&mut self, source: &Self) {
+        self.inner.clone_from(&source.inner);
+    }
 }
 
 impl<I> TBitSet<I> {
