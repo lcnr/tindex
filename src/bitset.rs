@@ -71,6 +71,10 @@ impl<I> TBitSet<I> {
         self.inner.len()
     }
 
+    pub fn element_count(&self) -> usize {
+        self.inner.iter().fold(0, |sum, elem| sum + elem.count_ones() as usize)
+    }
+
     pub fn shrink_to_fit(&mut self) {
         while self.inner.last().map_or(false, |&l| l == 0) {
             self.inner.pop();
@@ -181,6 +185,7 @@ mod tests {
     #[test]
     fn test() {
         let mut set = TBitSet::new();
+        assert_eq!(set.element_count(), 0);
         assert_eq!(set.get(1000000), false);
         assert_eq!(set.frame_count(), 0);
         set.add(3);
@@ -188,6 +193,7 @@ mod tests {
         assert_eq!(set.get(3), true);
         assert_eq!(set.get(4), false);
         set.add(5);
+        assert_eq!(set.element_count(), 2);
         assert_eq!(set.get(5), true);
         set.add(FRAME_SIZE + 2);
         assert_eq!(set.frame_count(), 2);
@@ -209,6 +215,7 @@ mod tests {
         assert_eq!(set.get(FRAME_SIZE * 2 + 1), false);
         set.remove(FRAME_SIZE * 100);
         assert_eq!(set.frame_count(), 3);
+        assert_eq!(set.element_count(), 3);
     }
 
     #[test]
