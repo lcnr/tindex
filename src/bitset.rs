@@ -1,6 +1,7 @@
 use std::{
     cmp::{Eq, PartialEq},
-    fmt, iter,
+    fmt,
+    iter::{self, FromIterator},
     marker::PhantomData,
     mem,
 };
@@ -122,6 +123,17 @@ impl<I: TIndex> TBitSet<I> {
     }
 }
 
+impl<I: TIndex> FromIterator<I> for TBitSet<I> {
+    #[inline]
+    fn from_iter<U: IntoIterator<Item = I>>(iter: U) -> TBitSet<I> {
+        let mut set = TBitSet::new();
+        for idx in iter {
+            set.add(idx);
+        }
+        set
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -172,7 +184,7 @@ mod tests {
         a.remove(FRAME_SIZE * 3);
         assert_ne!(a.frame_count(), b.frame_count());
         assert_eq!(a, b);
-        b.add(FRAME_SIZE* 4);
+        b.add(FRAME_SIZE * 4);
         assert_ne!(a, b);
         b.remove(FRAME_SIZE * 4);
         assert_ne!(a.frame_count(), b.frame_count());
