@@ -1,4 +1,9 @@
-use std::{fmt, marker::PhantomData, mem};
+use std::{
+    cmp::{Eq, PartialEq},
+    fmt, iter,
+    marker::PhantomData,
+    mem,
+};
 
 use crate::TIndex;
 
@@ -6,7 +11,6 @@ type Frame = u64;
 
 const FRAME_SIZE: usize = mem::size_of::<Frame>() * 8;
 
-#[derive(Hash)]
 pub struct TBitSet<I> {
     _marker: PhantomData<fn(I)>,
     inner: Vec<Frame>,
@@ -32,6 +36,27 @@ impl<I> Clone for TBitSet<I> {
         self.inner.clone_from(&source.inner);
     }
 }
+
+impl<I> PartialEq for TBitSet<I> {
+    fn eq(&self, rhs: &Self) -> bool {
+        if self.frame_count() < rhs.frame_count() {
+            self.inner
+                .iter()
+                .copied()
+                .chain(iter::repeat(0))
+                .zip(rhs.inner.iter().copied())
+                .all(|(a, b)| a == b)
+        } else {
+            self.inner
+                .iter()
+                .copied()
+                .zip(rhs.inner.iter().copied().chain(iter::repeat(0)))
+                .all(|(a, b)| a == b)
+        }
+    }
+}
+
+impl<I> Eq for TBitSet<I> {}
 
 impl<I> TBitSet<I> {
     pub fn new() -> Self {
@@ -132,5 +157,25 @@ mod tests {
         assert_eq!(set.get(FRAME_SIZE * 2 + 1), false);
         set.remove(FRAME_SIZE * 100);
         assert_eq!(set.frame_count(), 3);
+    }
+
+    #[test]
+    fn eq() {
+        let mut a = TBitSet::new();
+        let mut b = TBitSet::new();
+        a.add(FRAME_SIZE * 2);
+        assert_ne!(a, b);
+        b.add(FRAME_SIZE * 2);
+        assert_eq!(a, b);
+        a.add(FRAME_SIZE * 3);
+        assert_ne!(a, b);
+        a.remove(FRAME_SIZE * 3);
+        assert_ne!(a.frame_count(), b.frame_count());
+        assert_eq!(a, b);
+        b.add(FRAME_SIZE* 4);
+        assert_ne!(a, b);
+        b.remove(FRAME_SIZE * 4);
+        assert_ne!(a.frame_count(), b.frame_count());
+        assert_eq!(a, b);
     }
 }
