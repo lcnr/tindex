@@ -72,7 +72,9 @@ impl<I> TBitSet<I> {
     }
 
     pub fn element_count(&self) -> usize {
-        self.inner.iter().fold(0, |sum, elem| sum + elem.count_ones() as usize)
+        self.inner
+            .iter()
+            .fold(0, |sum, elem| sum + elem.count_ones() as usize)
     }
 
     pub fn shrink_to_fit(&mut self) {
@@ -101,7 +103,7 @@ impl<I: TIndex> TBitSet<I> {
     }
 
     pub fn set(&mut self, idx: I, value: bool) {
-       self.set_usize(idx.as_index(), value) 
+        self.set_usize(idx.as_index(), value)
     }
 
     pub fn add(&mut self, idx: I) {
@@ -135,7 +137,6 @@ impl<I: TIndex> TBitSet<I> {
 
     pub fn get(&self, idx: I) -> bool {
         self.get_usize(idx.as_index())
-        
     }
 
     pub fn iter(&self) -> Iter<I> {
@@ -157,12 +158,45 @@ impl<I: TIndex> FromIterator<I> for TBitSet<I> {
     }
 }
 
+impl<I: TIndex> IntoIterator for TBitSet<I> {
+    type Item = I;
+    type IntoIter = IntoIter<I>;
+
+    fn into_iter(self) -> IntoIter<I> {
+        IntoIter {
+            inner: self,
+            pos: 0,
+        }
+    }
+}
+
 pub struct Iter<'a, I> {
     inner: &'a TBitSet<I>,
     pos: usize,
 }
 
 impl<'a, I: TIndex> Iterator for Iter<'a, I> {
+    type Item = I;
+
+    fn next(&mut self) -> Option<I> {
+        while self.pos < self.inner.frame_count() * FRAME_SIZE {
+            let pos = self.pos;
+            self.pos += 1;
+            if self.inner.get_usize(pos) {
+                return Some(pos.into());
+            }
+        }
+
+        None
+    }
+}
+
+pub struct IntoIter<I> {
+    inner: TBitSet<I>,
+    pos: usize,
+}
+
+impl<I: TIndex> Iterator for IntoIter<I> {
     type Item = I;
 
     fn next(&mut self) -> Option<I> {
@@ -250,6 +284,14 @@ mod tests {
         dbg!(&set);
 
         let mut iter = set.iter();
+        assert_eq!(iter.next(), Some(1));
+        assert_eq!(iter.next(), Some(3));
+        assert_eq!(iter.next(), Some(4));
+        assert_eq!(iter.next(), Some(7));
+        assert_eq!(iter.next(), Some(1000));
+        assert_eq!(iter.next(), None);
+
+        let mut iter = set.into_iter();
         assert_eq!(iter.next(), Some(1));
         assert_eq!(iter.next(), Some(3));
         assert_eq!(iter.next(), Some(4));
