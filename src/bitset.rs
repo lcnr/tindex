@@ -79,8 +79,8 @@ impl<I> TBitSet<I> {
 }
 
 impl<I: TIndex> TBitSet<I> {
-    pub fn set(&mut self, idx: I, value: bool) {
-        let idx = idx.as_index();
+    #[inline]
+    fn set_usize(&mut self, idx: usize, value: bool) {
         let frame_offset = idx / FRAME_SIZE;
         if frame_offset >= self.inner.len() {
             if value {
@@ -96,16 +96,19 @@ impl<I: TIndex> TBitSet<I> {
         }
     }
 
+    pub fn set(&mut self, idx: I, value: bool) {
+       self.set_usize(idx.as_index(), value) 
+    }
+
     pub fn add(&mut self, idx: I) {
-        self.set(idx, true)
+        self.set_usize(idx.as_index(), true)
     }
 
     pub fn remove(&mut self, idx: I) {
-        self.set(idx, false)
+        self.set_usize(idx.as_index(), false)
     }
 
-    pub fn flip(&mut self, idx: I) {
-        let idx = idx.as_index();
+    fn flip_usize(&mut self, idx: usize) {
         let frame_offset = idx / FRAME_SIZE;
         if frame_offset >= self.inner.len() {
             self.inner.resize(frame_offset + 1, 0);
@@ -114,12 +117,28 @@ impl<I: TIndex> TBitSet<I> {
         self.inner[frame_offset] ^= 1 << idx - frame_offset * FRAME_SIZE;
     }
 
-    pub fn get(&self, idx: I) -> bool {
-        let idx = idx.as_index();
+    pub fn flip(&mut self, idx: I) {
+        self.flip_usize(idx.as_index())
+    }
+
+    #[inline]
+    fn get_usize(&self, idx: usize) -> bool {
         let frame_offset = idx / FRAME_SIZE;
         self.inner
             .get(frame_offset)
             .map_or(false, |v| v & (1 << idx - frame_offset * FRAME_SIZE) != 0)
+    }
+
+    pub fn get(&self, idx: I) -> bool {
+        self.get_usize(idx.as_index())
+        
+    }
+
+    pub fn iter(&self) -> Iter<I> {
+        Iter {
+            inner: self,
+            pos: 0,
+        }
     }
 }
 
@@ -131,6 +150,27 @@ impl<I: TIndex> FromIterator<I> for TBitSet<I> {
             set.add(idx);
         }
         set
+    }
+}
+
+pub struct Iter<'a, I> {
+    inner: &'a TBitSet<I>,
+    pos: usize,
+}
+
+impl<'a, I: TIndex> Iterator for Iter<'a, I> {
+    type Item = I;
+
+    fn next(&mut self) -> Option<I> {
+        while self.pos < self.inner.frame_count() * FRAME_SIZE {
+            let pos = self.pos;
+            self.pos += 1;
+            if self.inner.get_usize(pos) {
+                return Some(pos.into());
+            }
+        }
+
+        None
     }
 }
 
@@ -189,5 +229,25 @@ mod tests {
         b.remove(FRAME_SIZE * 4);
         assert_ne!(a.frame_count(), b.frame_count());
         assert_eq!(a, b);
+    }
+
+    #[test]
+    fn iter() {
+        let set: TBitSet<_> = [7, 4, 3, 4, 1, 1000].iter().copied().collect();
+        assert_eq!(set.get(1), true);
+        assert_eq!(set.get(2), false);
+        assert_eq!(set.get(4), true);
+        assert_eq!(set.get(7), true);
+        assert_eq!(set.get(99), false);
+        assert_eq!(set.get(1000), true);
+        dbg!(&set);
+
+        let mut iter = set.iter();
+        assert_eq!(iter.next(), Some(1));
+        assert_eq!(iter.next(), Some(3));
+        assert_eq!(iter.next(), Some(4));
+        assert_eq!(iter.next(), Some(7));
+        assert_eq!(iter.next(), Some(1000));
+        assert_eq!(iter.next(), None);
     }
 }
