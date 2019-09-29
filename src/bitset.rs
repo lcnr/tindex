@@ -149,6 +149,12 @@ impl<I: TIndex> TBitSet<I> {
             pos: 0,
         }
     }
+
+    pub fn extend<U: IntoIterator<Item = I>>(&mut self, iter: U) {
+        for item in iter {
+            self.add(item);
+        }
+    }
 }
 
 impl<I: TIndex> FromIterator<I> for TBitSet<I> {
@@ -280,7 +286,7 @@ mod tests {
 
     #[test]
     fn iter() {
-        let set: TBitSet<_> = [7, 4, 3, 4, 1, 1000].iter().copied().collect();
+        let mut set: TBitSet<_> = [7, 4, 3, 4, 1, 1000].iter().copied().collect();
         assert_eq!(set.get(1), true);
         assert_eq!(set.get(2), false);
         assert_eq!(set.get(4), true);
@@ -297,10 +303,16 @@ mod tests {
         assert_eq!(iter.next(), Some(1000));
         assert_eq!(iter.next(), None);
 
+        set.extend(iter::once(5).chain(iter::once(1)));
+        assert_eq!(set.get(1), true);
+        assert_eq!(set.get(2), false);
+        assert_eq!(set.get(5), true);
+
         let mut iter = set.into_iter();
         assert_eq!(iter.next(), Some(1));
         assert_eq!(iter.next(), Some(3));
         assert_eq!(iter.next(), Some(4));
+        assert_eq!(iter.next(), Some(5));
         assert_eq!(iter.next(), Some(7));
         assert_eq!(iter.next(), Some(1000));
         assert_eq!(iter.next(), None);
