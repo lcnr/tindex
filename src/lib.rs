@@ -188,7 +188,7 @@ impl<I, T: Clone> Clone for TVec<I, T> {
 
 impl<I, T: PartialEq> PartialEq for TVec<I, T> {
     fn eq(&self, other: &Self) -> bool {
-        self == other
+        self.inner == other.inner
     }
 }
 
