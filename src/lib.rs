@@ -232,6 +232,11 @@ impl<I, T> TVec<I, T> {
         self.inner.append(&mut other.inner)
     }
 }
+impl<I, T: Clone> TVec<I, T> {
+    pub fn extend_from_slice(&mut self, other: &TSlice<I, T>) {
+        self.inner.extend_from_slice(&other.inner)
+    }
+}
 
 impl<I: TIndex, T> TVec<I, T> {
     pub fn push(&mut self, item: T) -> I {
