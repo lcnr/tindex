@@ -1,4 +1,5 @@
 use std::{
+    borrow::Borrow,
     cmp::{Eq, PartialEq},
     fmt,
     iter::{self, DoubleEndedIterator, FromIterator},
@@ -143,8 +144,9 @@ impl<I: TIndex> TBitSet<I> {
         self.get_usize(idx.as_index())
     }
 
-    pub fn iter(&self) -> Iter<I> {
+    pub fn iter(&self) -> Iter<I, &Self> {
         Iter {
+            _marker: PhantomData,
             inner: self,
             pos: 0,
             end_pos: self.frame_count() * FRAME_SIZE,
@@ -169,29 +171,37 @@ impl<I: TIndex> FromIterator<I> for TBitSet<I> {
     }
 }
 
-impl<'a, I: TIndex> IntoIterator for &'a TBitSet<I> {
+impl<I: TIndex> IntoIterator for TBitSet<I> {
     type Item = I;
-    type IntoIter = Iter<'a, I>;
+    type IntoIter = Iter<I, TBitSet<I>>;
 
-    fn into_iter(self) -> Iter<'a, I> {
-        self.iter()
+    fn into_iter(self) -> Iter<I, TBitSet<I>> {
+        let end_pos = self.frame_count() * FRAME_SIZE;
+
+        Iter {
+            _marker: PhantomData,
+            inner: self,
+            pos: 0,
+            end_pos,
+        }
     }
 }
 
-pub struct Iter<'a, I> {
-    inner: &'a TBitSet<I>,
+pub struct Iter<I, B> {
+    _marker: PhantomData<fn(I)>,
+    inner: B,
     pos: usize,
     end_pos: usize,
 }
 
-impl<'a, I: TIndex> Iterator for Iter<'a, I> {
+impl<I: TIndex, B: Borrow<TBitSet<I>>> Iterator for Iter<I, B> {
     type Item = I;
 
     fn next(&mut self) -> Option<I> {
         while self.pos < self.end_pos {
             let pos = self.pos;
             self.pos += 1;
-            if self.inner.get_usize(pos) {
+            if self.inner.borrow().get_usize(pos) {
                 return Some(pos.into());
             }
         }
@@ -200,12 +210,12 @@ impl<'a, I: TIndex> Iterator for Iter<'a, I> {
     }
 }
 
-impl<'a, I: TIndex> DoubleEndedIterator for Iter<'a, I> {
+impl<I: TIndex, B: Borrow<TBitSet<I>>> DoubleEndedIterator for Iter<I, B> {
     fn next_back(&mut self) -> Option<I> {
         while self.end_pos > self.pos {
             let pos = self.end_pos;
             self.end_pos -= 1;
-            if self.inner.get_usize(pos) {
+            if self.inner.borrow().get_usize(pos) {
                 return Some(pos.into());
             }
         }
