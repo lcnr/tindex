@@ -210,6 +210,13 @@ impl<I, T> TVec<I, T> {
         }
     }
 
+    pub fn with_capacity(capacity: usize) -> Self {
+        Self {
+            _marker: PhantomData,
+            inner: Vec::with_capacity(capacity),
+        }
+    }
+
     pub fn from_vec(vec: Vec<T>) -> Self {
         Self {
             _marker: PhantomData,
