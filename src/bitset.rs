@@ -1,7 +1,7 @@
 use std::{
     cmp::{Eq, PartialEq},
     fmt,
-    iter::{self, FromIterator},
+    iter::{self, DoubleEndedIterator, FromIterator},
     marker::PhantomData,
     mem,
 };
@@ -147,6 +147,7 @@ impl<I: TIndex> TBitSet<I> {
         Iter {
             inner: self,
             pos: 0,
+            end_pos: self.frame_count() * FRAME_SIZE,
         }
     }
 
@@ -168,28 +169,26 @@ impl<I: TIndex> FromIterator<I> for TBitSet<I> {
     }
 }
 
-impl<I: TIndex> IntoIterator for TBitSet<I> {
+impl<'a, I: TIndex> IntoIterator for &'a TBitSet<I> {
     type Item = I;
-    type IntoIter = IntoIter<I>;
+    type IntoIter = Iter<'a, I>;
 
-    fn into_iter(self) -> IntoIter<I> {
-        IntoIter {
-            inner: self,
-            pos: 0,
-        }
+    fn into_iter(self) -> Iter<'a, I> {
+        self.iter()
     }
 }
 
 pub struct Iter<'a, I> {
     inner: &'a TBitSet<I>,
     pos: usize,
+    end_pos: usize,
 }
 
 impl<'a, I: TIndex> Iterator for Iter<'a, I> {
     type Item = I;
 
     fn next(&mut self) -> Option<I> {
-        while self.pos < self.inner.frame_count() * FRAME_SIZE {
+        while self.pos < self.end_pos {
             let pos = self.pos;
             self.pos += 1;
             if self.inner.get_usize(pos) {
@@ -201,18 +200,11 @@ impl<'a, I: TIndex> Iterator for Iter<'a, I> {
     }
 }
 
-pub struct IntoIter<I> {
-    inner: TBitSet<I>,
-    pos: usize,
-}
-
-impl<I: TIndex> Iterator for IntoIter<I> {
-    type Item = I;
-
-    fn next(&mut self) -> Option<I> {
-        while self.pos < self.inner.frame_count() * FRAME_SIZE {
-            let pos = self.pos;
-            self.pos += 1;
+impl<'a, I: TIndex> DoubleEndedIterator for Iter<'a, I> {
+    fn next_back(&mut self) -> Option<I> {
+        while self.end_pos > self.pos {
+            let pos = self.end_pos;
+            self.end_pos -= 1;
             if self.inner.get_usize(pos) {
                 return Some(pos.into());
             }
@@ -293,7 +285,6 @@ mod tests {
         assert_eq!(set.get(7), true);
         assert_eq!(set.get(99), false);
         assert_eq!(set.get(1000), true);
-        dbg!(&set);
 
         let mut iter = set.iter();
         assert_eq!(iter.next(), Some(1));
@@ -312,9 +303,10 @@ mod tests {
         assert_eq!(iter.next(), Some(1));
         assert_eq!(iter.next(), Some(3));
         assert_eq!(iter.next(), Some(4));
+        assert_eq!(iter.next_back(), Some(1000));
+        assert_eq!(iter.next_back(), Some(7));
         assert_eq!(iter.next(), Some(5));
-        assert_eq!(iter.next(), Some(7));
-        assert_eq!(iter.next(), Some(1000));
         assert_eq!(iter.next(), None);
+        assert_eq!(iter.next_back(), None);
     }
 }
