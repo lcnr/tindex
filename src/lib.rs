@@ -87,6 +87,14 @@ impl<I, T> TSlice<I, T> {
 }
 
 impl<I: TIndex, T> TSlice<I, T> {
+    pub fn get(&self, idx: I) -> Option<&T> {
+        self.inner.get(idx.as_index())
+    }
+
+    pub fn get_mut(&mut self, idx: I) -> Option<&mut T> {
+        self.inner.get_mut(idx.as_index())
+    }
+
     pub fn split_at(&self, mid: I) -> (&Self, &Self) {
         let (left, right) = self.inner.split_at(mid.as_index());
         (left.into(), right.into())
