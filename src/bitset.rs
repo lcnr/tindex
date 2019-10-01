@@ -149,7 +149,7 @@ impl<I: TIndex> TBitSet<I> {
             _marker: PhantomData,
             inner: self,
             pos: 0,
-            end_pos: self.frame_count() * FRAME_SIZE - 1,
+            end_pos: self.frame_count() * FRAME_SIZE,
         }
     }
 
@@ -176,7 +176,7 @@ impl<I: TIndex> IntoIterator for TBitSet<I> {
     type IntoIter = Iter<I, TBitSet<I>>;
 
     fn into_iter(self) -> Iter<I, TBitSet<I>> {
-        let end_pos = self.frame_count() * FRAME_SIZE - 1;
+        let end_pos = self.frame_count() * FRAME_SIZE;
 
         Iter {
             _marker: PhantomData,
