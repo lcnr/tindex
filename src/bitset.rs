@@ -149,7 +149,7 @@ impl<I: TIndex> TBitSet<I> {
             _marker: PhantomData,
             inner: self,
             pos: 0,
-            end_pos: self.frame_count() * FRAME_SIZE,
+            end_pos: self.frame_count() * FRAME_SIZE - 1,
         }
     }
 
@@ -176,7 +176,7 @@ impl<I: TIndex> IntoIterator for TBitSet<I> {
     type IntoIter = Iter<I, TBitSet<I>>;
 
     fn into_iter(self) -> Iter<I, TBitSet<I>> {
-        let end_pos = self.frame_count() * FRAME_SIZE;
+        let end_pos = self.frame_count() * FRAME_SIZE - 1;
 
         Iter {
             _marker: PhantomData,
@@ -198,14 +198,13 @@ impl<I: TIndex, B: Borrow<TBitSet<I>>> Iterator for Iter<I, B> {
     type Item = I;
 
     fn next(&mut self) -> Option<I> {
-        while self.pos < self.end_pos {
+        while self.pos <= self.end_pos {
             let pos = self.pos;
             self.pos += 1;
             if self.inner.borrow().get_usize(pos) {
                 return Some(pos.into());
             }
         }
-
         None
     }
 }
@@ -217,6 +216,13 @@ impl<I: TIndex, B: Borrow<TBitSet<I>>> DoubleEndedIterator for Iter<I, B> {
             self.end_pos -= 1;
             if self.inner.borrow().get_usize(pos) {
                 return Some(pos.into());
+            }
+        }
+
+        if self.end_pos == self.pos {
+            self.pos += 1;
+            if self.inner.borrow().get_usize(self.end_pos) {
+                return Some(self.end_pos.into());
             }
         }
 
@@ -292,11 +298,14 @@ mod tests {
         assert_eq!(set.get(1), true);
         assert_eq!(set.get(2), false);
         assert_eq!(set.get(4), true);
+        set.add(0);
+        assert_eq!(set.get(0), true);
         assert_eq!(set.get(7), true);
         assert_eq!(set.get(99), false);
         assert_eq!(set.get(1000), true);
 
         let mut iter = set.iter();
+        assert_eq!(iter.next(), Some(0));
         assert_eq!(iter.next(), Some(1));
         assert_eq!(iter.next(), Some(3));
         assert_eq!(iter.next(), Some(4));
@@ -304,6 +313,7 @@ mod tests {
         assert_eq!(iter.next(), Some(1000));
         assert_eq!(iter.next(), None);
 
+        set.remove(0);
         set.extend(iter::once(5).chain(iter::once(1)));
         assert_eq!(set.get(1), true);
         assert_eq!(set.get(2), false);
@@ -318,5 +328,19 @@ mod tests {
         assert_eq!(iter.next(), Some(5));
         assert_eq!(iter.next(), None);
         assert_eq!(iter.next_back(), None);
+
+        let set: TBitSet<_> = [0, 1].iter().copied().collect();
+        let mut iter = set.iter();
+        assert_eq!(iter.next_back(), Some(1));
+        assert_eq!(iter.next_back(), Some(0));
+        assert_eq!(iter.next_back(), None);
+        let mut iter = set.iter();
+        assert_eq!(iter.next_back(), Some(1));
+        assert_eq!(iter.next(), Some(0));
+        assert_eq!(iter.next_back(), None);
+        let mut iter = set.iter();
+        assert_eq!(iter.next(), Some(0));
+        assert_eq!(iter.next_back(), Some(1));
+        assert_eq!(iter.next(), None);
     }
 }
