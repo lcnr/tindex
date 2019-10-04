@@ -18,10 +18,10 @@ pub struct TBitSet<I> {
     inner: Vec<Frame>,
 }
 
-impl<I> fmt::Debug for TBitSet<I> {
+impl<I: TIndex + fmt::Debug> fmt::Debug for TBitSet<I> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_list()
-            .entries(self.inner.iter().map(|frame| format!("{:#b}", frame)))
+            .entries(self.iter())
             .finish()
     }
 }
