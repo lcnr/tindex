@@ -5,7 +5,7 @@ use std::{
     iter::FromIterator,
     marker::PhantomData,
     ops::{Deref, DerefMut, Index, IndexMut},
-    slice::{Iter, IterMut},
+    slice::{Iter, IterMut, Windows},
     vec::IntoIter,
 };
 
@@ -113,6 +113,10 @@ impl<I, T> TSlice<I, T> {
         K: Ord,
     {
         self.inner.sort_by_cached_key(f)
+    }
+
+    pub fn windows(&self, size: usize) -> Windows<T> {
+        self.inner.windows(size)
     }
 }
 
