@@ -20,9 +20,7 @@ pub struct TBitSet<I> {
 
 impl<I: TIndex + fmt::Debug> fmt::Debug for TBitSet<I> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_list()
-            .entries(self.iter())
-            .finish()
+        f.debug_list().entries(self.iter()).finish()
     }
 }
 

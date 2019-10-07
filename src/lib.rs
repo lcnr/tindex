@@ -1,6 +1,6 @@
 use std::{
     borrow::{Borrow, BorrowMut, ToOwned},
-    cmp::{Eq, PartialEq},
+    cmp::{Eq, Ordering, PartialEq},
     fmt,
     iter::FromIterator,
     marker::PhantomData,
@@ -107,6 +107,31 @@ impl<I: TIndex, T> TSlice<I, T> {
     pub fn split_at_mut(&mut self, mid: I) -> (&mut Self, &mut Self) {
         let (left, right) = self.inner.split_at_mut(mid.as_index());
         (left.into(), right.into())
+    }
+
+    pub fn binary_search(&self, x: &T) -> Result<I, I>
+    where
+        T: Ord,
+    {
+        self.inner.binary_search(x).map(I::from).map_err(I::from)
+    }
+
+    pub fn binary_search_by<'a, F>(&'a self, f: F) -> Result<I, I>
+    where
+        F: FnMut(&'a T) -> Ordering,
+    {
+        self.inner.binary_search_by(f).map(I::from).map_err(I::from)
+    }
+
+    pub fn binary_search_by_key<'a, B, F>(&'a self, b: &B, f: F) -> Result<I, I>
+    where
+        F: FnMut(&'a T) -> B,
+        B: Ord,
+    {
+        self.inner
+            .binary_search_by_key(b, f)
+            .map(I::from)
+            .map_err(I::from)
     }
 }
 
