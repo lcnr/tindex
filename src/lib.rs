@@ -84,6 +84,36 @@ impl<I, T> TSlice<I, T> {
     pub fn iter_mut<'a>(&'a mut self) -> IterMut<'a, T> {
         self.inner.iter_mut()
     }
+
+    pub fn sort(&mut self)
+    where
+        T: Ord,
+    {
+        self.inner.sort()
+    }
+
+    pub fn sort_by<F>(&mut self, compare: F)
+    where
+        F: FnMut(&T, &T) -> Ordering,
+    {
+        self.inner.sort_by(compare)
+    }
+
+    pub fn sort_by_key<K, F>(&mut self, f: F)
+    where
+        F: FnMut(&T) -> K,
+        K: Ord,
+    {
+        self.inner.sort_by_key(f)
+    }
+
+    pub fn sort_by_cached_key<K, F>(&mut self, f: F)
+    where
+        F: FnMut(&T) -> K,
+        K: Ord,
+    {
+        self.inner.sort_by_cached_key(f)
+    }
 }
 
 impl<I: TIndex, T> TSlice<I, T> {
