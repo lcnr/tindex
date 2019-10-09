@@ -297,6 +297,13 @@ impl<I, T> TVec<I, T> {
         self.inner.pop()
     }
 
+    pub fn resize(&mut self, new_len: usize, value: T)
+    where
+        T: Clone,
+    {
+        self.inner.resize(new_len, value)
+    }
+
     pub fn append(&mut self, other: &mut Self) {
         self.inner.append(&mut other.inner)
     }
@@ -313,7 +320,6 @@ impl<I: TIndex, T> TVec<I, T> {
         self.inner.push(item);
         idx.into()
     }
-
 
     pub fn insert(&mut self, idx: I, elem: T) {
         self.inner.insert(idx.as_index(), elem)
