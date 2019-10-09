@@ -10,8 +10,10 @@ use std::{
 };
 
 pub mod bitset;
+pub mod iter;
 pub mod slice_index;
 
+use iter::IndexIter;
 use slice_index::TSliceIndex;
 
 pub trait TIndex: From<usize> {
@@ -129,8 +131,8 @@ impl<I: TIndex, T> TSlice<I, T> {
         self.inner.get_mut(idx.as_index())
     }
 
-    pub fn index_iter(&self) -> impl Iterator<Item = I> {
-        (0..self.inner.len()).map(I::from)
+    pub fn index_iter(&self) -> IndexIter<I> {
+        IndexIter::new(self.inner.len())
     }
 
     pub fn swap(&mut self, a: I, b: I) {
