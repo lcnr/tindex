@@ -129,6 +129,10 @@ impl<I: TIndex, T> TSlice<I, T> {
         self.inner.get_mut(idx.as_index())
     }
 
+    pub fn index_iter(&self) -> impl Iterator<Item = I> {
+        (0..self.inner.len()).map(I::from)
+    }
+
     pub fn swap(&mut self, a: I, b: I) {
         self.inner.swap(a.as_index(), b.as_index())
     }
