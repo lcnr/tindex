@@ -314,6 +314,11 @@ impl<I: TIndex, T> TVec<I, T> {
         idx.into()
     }
 
+
+    pub fn insert(&mut self, idx: I, elem: T) {
+        self.inner.insert(idx.as_index(), elem)
+    }
+
     pub fn remove(&mut self, id: I) -> T {
         self.inner.remove(id.as_index())
     }
