@@ -79,6 +79,13 @@ impl<I, T> TSlice<I, T> {
         self.inner.split_last().map(|(t, slice)| (t, slice.into()))
     }
 
+    pub fn contains<R: AsRef<T>>(&self, item: R) -> bool
+    where
+        T: PartialEq<T>,
+    {
+        self.inner.contains(item.as_ref())
+    }
+
     pub fn iter<'a>(&'a self) -> Iter<'a, T> {
         self.inner.iter()
     }
