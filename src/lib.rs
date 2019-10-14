@@ -353,6 +353,34 @@ impl<I: TIndex, T> TVec<I, T> {
     }
 }
 
+impl<'a, I, T: Clone> From<&'a TSlice<I, T>> for TVec<I, T> {
+    #[inline]
+    fn from(slice: &'a TSlice<I, T>) -> Self {
+        slice.to_owned()
+    }
+}
+
+impl<'a, I, T: Clone> From<&'a mut TSlice<I, T>> for TVec<I, T> {
+    #[inline]
+    fn from(slice: &'a mut TSlice<I, T>) -> Self {
+        slice.to_owned()
+    }
+}
+
+impl<'a, I, T: Clone> From<&'a [T]> for TVec<I, T> {
+    #[inline]
+    fn from(slice: &'a [T]) -> Self {
+        Self::from_vec(slice.into())
+    }
+}
+
+impl<'a, I, T: Clone> From<&'a mut [T]> for TVec<I, T> {
+    #[inline]
+    fn from(slice: &'a mut [T]) -> Self {
+        Self::from_vec(slice.into())
+    }
+}
+
 impl<'a, I, T> From<&'a Vec<T>> for &'a TVec<I, T> {
     #[inline]
     fn from(vec: &'a Vec<T>) -> Self {
