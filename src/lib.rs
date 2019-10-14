@@ -94,6 +94,10 @@ impl<I, T> TSlice<I, T> {
         self.inner.iter_mut()
     }
 
+    pub fn to_slice<'a>(&'a self) -> &'a [T] {
+        &self.inner
+    }
+
     pub fn sort(&mut self)
     where
         T: Ord,
