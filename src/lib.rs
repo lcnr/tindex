@@ -315,13 +315,15 @@ impl<I, T> TVec<I, T> {
         self.inner.resize(new_len, value)
     }
 
+    pub fn extend_from_slice(&mut self, other: &TSlice<I, T>)
+    where
+        T: Clone,
+    {
+        self.inner.extend_from_slice(&other.inner)
+    }
+
     pub fn append(&mut self, other: &mut Self) {
         self.inner.append(&mut other.inner)
-    }
-}
-impl<I, T: Clone> TVec<I, T> {
-    pub fn extend_from_slice(&mut self, other: &TSlice<I, T>) {
-        self.inner.extend_from_slice(&other.inner)
     }
 }
 
