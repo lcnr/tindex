@@ -4,9 +4,9 @@ use std::{
     fmt,
     iter::FromIterator,
     marker::PhantomData,
-    ops::{Deref, DerefMut, Index, IndexMut},
+    ops::{Bound, Deref, DerefMut, Index, IndexMut, RangeBounds},
     slice::{Iter, IterMut, Windows},
-    vec::IntoIter,
+    vec::{IntoIter, Splice},
 };
 
 pub mod bitset;
@@ -17,12 +17,12 @@ use iter::IndexIter;
 use slice_index::TSliceIndex;
 
 pub trait TIndex: From<usize> {
-    fn as_index(self) -> usize;
+    fn as_index(&self) -> usize;
 }
 
 impl TIndex for usize {
-    fn as_index(self) -> usize {
-        self
+    fn as_index(&self) -> usize {
+        *self
     }
 }
 
@@ -340,6 +340,26 @@ impl<I: TIndex, T> TVec<I, T> {
 
     pub fn remove(&mut self, id: I) -> T {
         self.inner.remove(id.as_index())
+    }
+
+    pub fn splice<R, E>(&mut self, range: R, replace_with: E) -> Splice<'_, E::IntoIter>
+    where
+        R: RangeBounds<I>,
+        E: IntoIterator<Item = T>,
+    {
+        let start = match range.start_bound() {
+            Bound::Included(v) => Bound::Included(v.as_index()),
+            Bound::Excluded(v) => Bound::Excluded(v.as_index()),
+            Bound::Unbounded => Bound::Unbounded,
+        };
+
+        let end = match range.end_bound() {
+            Bound::Included(v) => Bound::Included(v.as_index()),
+            Bound::Excluded(v) => Bound::Excluded(v.as_index()),
+            Bound::Unbounded => Bound::Unbounded,
+        };
+
+        self.inner.splice((start, end), replace_with)
     }
 
     pub fn split_off(&mut self, at: I) -> Self {
