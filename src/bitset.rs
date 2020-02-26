@@ -96,12 +96,10 @@ impl<I: TIndex> TBitSet<I> {
                 self.inner.resize(frame_offset + 1, 0);
                 self.inner[frame_offset] |= 1 << idx - frame_offset * FRAME_SIZE;
             }
+        } else if value {
+            self.inner[frame_offset] |= 1 << idx - frame_offset * FRAME_SIZE;
         } else {
-            if value {
-                self.inner[frame_offset] |= 1 << idx - frame_offset * FRAME_SIZE;
-            } else {
-                self.inner[frame_offset] &= !(1 << idx - frame_offset * FRAME_SIZE);
-            }
+            self.inner[frame_offset] &= !(1 << idx - frame_offset * FRAME_SIZE);
         }
     }
 

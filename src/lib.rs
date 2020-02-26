@@ -59,6 +59,10 @@ impl<I, T: PartialEq> PartialEq for TSlice<I, T> {
 impl<I, T: Eq> Eq for TSlice<I, T> {}
 
 impl<I, T> TSlice<I, T> {
+    pub fn is_empty(&self) -> bool {
+        self.inner.is_empty()
+    }
+
     pub fn len(&self) -> usize {
         self.inner.len()
     }
@@ -73,6 +77,10 @@ impl<I, T> TSlice<I, T> {
 
     pub fn last(&self) -> Option<&T> {
         self.inner.last()
+    }
+
+    pub fn last_mut(&mut self) -> Option<&mut T> {
+        self.inner.last_mut()
     }
 
     pub fn split_last(&self) -> Option<(&T, &Self)> {
