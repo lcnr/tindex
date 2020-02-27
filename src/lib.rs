@@ -316,6 +316,28 @@ impl<I, T> TVec<I, T> {
         self.inner.pop()
     }
 
+    pub fn retain<F>(&mut self, mut f: F)
+    where
+        F: FnMut(&mut T) -> bool,
+    {
+        let len = self.len();
+        let mut del = 0;
+        {
+            let v = &mut self.inner;
+
+            for i in 0..len {
+                if !f(&mut v[i]) {
+                    del += 1;
+                } else if del > 0 {
+                    v.swap(i - del, i);
+                }
+            }
+        }
+        if del > 0 {
+            self.inner.truncate(len - del);
+        }
+    }
+
     pub fn resize(&mut self, new_len: usize, value: T)
     where
         T: Clone,
