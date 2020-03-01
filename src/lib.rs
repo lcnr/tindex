@@ -13,6 +13,8 @@ pub mod bitset;
 pub mod iter;
 pub mod slice_index;
 
+pub use bitset::TBitSet;
+
 use iter::IndexIter;
 use slice_index::TSliceIndex;
 
