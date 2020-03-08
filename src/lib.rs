@@ -152,6 +152,22 @@ impl<I: TIndex, T> TSlice<I, T> {
         self.inner.get_mut(idx.as_index())
     }
 
+    pub fn last_id(&self) -> Option<I> {
+        if self.inner.is_empty() {
+            None
+        } else {
+            Some((self.inner.len() - 1).into())
+        }
+    }
+
+    pub fn range_start(&self) -> I {
+        I::from(0)
+    }
+
+    pub fn range_end(&self) -> I {
+        I::from(self.inner.len())
+    }
+
     pub fn index_iter(&self) -> IndexIter<I> {
         IndexIter::new(self.inner.len())
     }
@@ -396,14 +412,6 @@ impl<I: TIndex, T> TVec<I, T> {
 
     pub fn split_off(&mut self, at: I) -> Self {
         self.inner.split_off(at.as_index()).into()
-    }
-
-    pub fn last_id(&self) -> Option<I> {
-        if self.inner.is_empty() {
-            None
-        } else {
-            Some((self.inner.len() - 1).into())
-        }
     }
 }
 
