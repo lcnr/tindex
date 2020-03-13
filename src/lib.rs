@@ -476,6 +476,12 @@ impl<I, T> From<Vec<T>> for TVec<I, T> {
     }
 }
 
+impl<I, T> Extend<T> for TVec<I, T> {
+    fn extend<U: IntoIterator<Item = T>>(&mut self, iter: U) {
+        self.inner.extend(iter)
+    }
+}
+
 impl<I, T> IntoIterator for TVec<I, T> {
     type Item = T;
     type IntoIter = IntoIter<T>;
