@@ -308,12 +308,18 @@ impl<I, T: PartialEq> PartialEq for TVec<I, T> {
 
 impl<I, T: Eq> Eq for TVec<I, T> {}
 
-impl<I, T> TVec<I, T> {
-    pub fn new() -> Self {
+impl<I, T> Default for TVec<I, T> {
+    fn default() -> Self {
         Self {
             _marker: PhantomData,
             inner: Vec::new(),
         }
+    }
+}
+
+impl<I, T> TVec<I, T> {
+    pub fn new() -> Self {
+        Default::default()
     }
 
     pub fn with_capacity(capacity: usize) -> Self {
