@@ -2,6 +2,7 @@ use std::{
     borrow::{Borrow, BorrowMut, ToOwned},
     cmp::{Eq, Ordering, PartialEq},
     fmt,
+    hash::{Hash, Hasher},
     iter::FromIterator,
     marker::PhantomData,
     ops::{Bound, Deref, DerefMut, Index, IndexMut, RangeBounds},
@@ -50,15 +51,17 @@ impl<I, T: Clone> ToOwned for TSlice<I, T> {
 
 impl<I, T: PartialEq> PartialEq for TSlice<I, T> {
     fn eq(&self, other: &Self) -> bool {
-        if self.len() == other.len() {
-            self.iter().zip(other.iter()).all(|(s, o)| s == o)
-        } else {
-            false
-        }
+        self.inner.eq(&other.inner)
     }
 }
 
 impl<I, T: Eq> Eq for TSlice<I, T> {}
+
+impl<I, T: Hash> Hash for TSlice<I, T> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.inner.hash(state)
+    }
+}
 
 impl<I, T> TSlice<I, T> {
     pub fn is_empty(&self) -> bool {
@@ -307,6 +310,12 @@ impl<I, T: PartialEq> PartialEq for TVec<I, T> {
 }
 
 impl<I, T: Eq> Eq for TVec<I, T> {}
+
+impl<I, T: Hash> Hash for TVec<I, T> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.inner.hash(state)
+    }
+}
 
 impl<I, T> Default for TVec<I, T> {
     fn default() -> Self {
