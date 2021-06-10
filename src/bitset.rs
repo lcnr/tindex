@@ -74,6 +74,10 @@ impl<I> TBitSet<I> {
         self.inner.iter().all(|&frame| frame == 0)
     }
 
+    pub fn clear(&mut self) {
+        self.inner.clear()
+    }
+
     pub fn element_count(&self) -> usize {
         self.inner
             .iter()
@@ -241,8 +245,12 @@ mod tests {
         assert_eq!(set.frame_count(), 1);
         assert_eq!(set.get(3), true);
         assert_eq!(set.get(4), false);
+        assert!(!set.is_empty());
+        set.clear();
+        assert!(set.is_empty());
+        assert_eq!(set.get(3), false);
         set.add(5);
-        assert_eq!(set.element_count(), 2);
+        assert_eq!(set.element_count(), 1);
         assert!(!set.is_empty());
         assert_eq!(set.get(5), true);
         set.add(FRAME_SIZE + 2);
@@ -265,7 +273,7 @@ mod tests {
         assert_eq!(set.get(FRAME_SIZE * 2 + 1), false);
         set.remove(FRAME_SIZE * 100);
         assert_eq!(set.frame_count(), 3);
-        assert_eq!(set.element_count(), 3);
+        assert_eq!(set.element_count(), 2);
     }
 
     #[test]
