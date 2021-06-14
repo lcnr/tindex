@@ -36,14 +36,16 @@ impl<I> Clone for TBitSet<I> {
         self.inner.clone_from(&source.inner);
     }
 }
-impl<I> hash::Hash for TBitSet<I> {
+
+impl<I: hash::Hash + TIndex> hash::Hash for TBitSet<I> {
     fn hash<H>(&self, state: &mut H)
     where
         H: hash::Hasher,
     {
-        self.inner.hash(state)
+        self.iter().for_each(|i| i.hash(state))
     }
 }
+
 impl<I> PartialEq for TBitSet<I> {
     fn eq(&self, rhs: &Self) -> bool {
         if self.frame_count() < rhs.frame_count() {
