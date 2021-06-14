@@ -144,6 +144,18 @@ impl<I: TIndex> TBitSet<I> {
         self.get_usize(idx.as_index())
     }
 
+    pub fn union(&self, other: &TBitSet<I>) -> TBitSet<I> {
+        TBitSet {
+            inner: self
+                .inner
+                .iter()
+                .zip(other.inner.iter())
+                .map(|(&l, &r)| l & r)
+                .collect(),
+            _marker: PhantomData,
+        }
+    }
+
     pub fn iter(&self) -> Iter<I, &Self> {
         Iter {
             _marker: PhantomData,
@@ -346,5 +358,12 @@ mod tests {
         assert_eq!(iter.next(), Some(0));
         assert_eq!(iter.next_back(), Some(1));
         assert_eq!(iter.next(), None);
+    }
+
+    #[test]
+    fn union() {
+        let a: TBitSet<usize> = [1, 3, 4, 100, 300, 1800].iter().copied().collect();
+        let b: TBitSet<_> = [3, 5, 99, 300].iter().copied().collect();
+        assert_eq!(a.union(&b), [3, 300].iter().copied().collect());
     }
 }
