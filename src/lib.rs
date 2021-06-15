@@ -19,7 +19,7 @@ pub use bitset::TBitSet;
 use iter::IndexIter;
 use slice_index::TSliceIndex;
 
-pub trait TIndex: From<usize> {
+pub trait TIndex: From<usize> + PartialEq + Eq + PartialOrd + Ord {
     fn as_index(&self) -> usize;
 }
 
