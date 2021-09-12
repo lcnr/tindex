@@ -37,6 +37,12 @@ impl<I> Clone for TBitSet<I> {
     }
 }
 
+impl<I> Default for TBitSet<I> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<I: hash::Hash + TIndex> hash::Hash for TBitSet<I> {
     fn hash<H>(&self, state: &mut H)
     where
