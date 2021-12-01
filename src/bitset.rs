@@ -104,6 +104,15 @@ impl<I> TBitSet<I> {
             self.inner.pop();
         }
     }
+
+    pub fn contains(&self, other: &TBitSet<I>) -> bool {
+        self.inner
+            .iter()
+            .copied()
+            .chain(iter::repeat(0))
+            .zip(&other.inner)
+            .all(|(this, other)| (this | other) == this)
+    }
 }
 
 impl<I: TIndex> TBitSet<I> {
@@ -318,9 +327,13 @@ mod tests {
         assert_eq!(a, b);
         b.add(FRAME_SIZE * 4);
         assert_ne!(a, b);
+        assert!(b.contains(&a));
+        assert!(!a.contains(&b));
         b.remove(FRAME_SIZE * 4);
         assert_ne!(a.frame_count(), b.frame_count());
         assert_eq!(a, b);
+        assert!(a.contains(&b));
+        assert!(b.contains(&a));
     }
 
     #[test]
