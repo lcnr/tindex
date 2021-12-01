@@ -238,7 +238,7 @@ impl<I: TIndex, B: Borrow<TBitSet<I>>> Iterator for Iter<I, B> {
             let pos = self.pos;
             self.pos += 1;
             if self.inner.borrow().get_usize(pos) {
-                return Some(pos.into());
+                return Some(I::from_index(pos.into()));
             }
         }
         None
@@ -251,14 +251,14 @@ impl<I: TIndex, B: Borrow<TBitSet<I>>> DoubleEndedIterator for Iter<I, B> {
             let pos = self.end_pos;
             self.end_pos -= 1;
             if self.inner.borrow().get_usize(pos) {
-                return Some(pos.into());
+                return Some(I::from_index(pos));
             }
         }
 
         if self.end_pos == self.pos {
             self.pos += 1;
             if self.inner.borrow().get_usize(self.end_pos) {
-                return Some(self.end_pos.into());
+                return Some(I::from_index(self.end_pos));
             }
         }
 
@@ -338,7 +338,7 @@ mod tests {
 
     #[test]
     fn iter() {
-        let mut set: TBitSet<_> = [7, 4, 3, 4, 1, 1000].iter().copied().collect();
+        let mut set: TBitSet<usize> = [7, 4, 3, 4, 1, 1000].into_iter().collect();
         assert_eq!(set.get(1), true);
         assert_eq!(set.get(2), false);
         assert_eq!(set.get(4), true);
@@ -373,7 +373,7 @@ mod tests {
         assert_eq!(iter.next(), None);
         assert_eq!(iter.next_back(), None);
 
-        let set: TBitSet<_> = [0, 1].iter().copied().collect();
+        let set: TBitSet<u32> = [0, 1].into_iter().collect();
         let mut iter = set.iter();
         assert_eq!(iter.next_back(), Some(1));
         assert_eq!(iter.next_back(), Some(0));
@@ -390,8 +390,8 @@ mod tests {
 
     #[test]
     fn union() {
-        let a: TBitSet<usize> = [1, 3, 4, 100, 300, 1800].iter().copied().collect();
-        let b: TBitSet<_> = [3, 5, 99, 300].iter().copied().collect();
-        assert_eq!(a.union(&b), [3, 300].iter().copied().collect());
+        let a: TBitSet<usize> = [1, 3, 4, 100, 300, 1800].into_iter().collect();
+        let b: TBitSet<_> = [3, 5, 99, 300].into_iter().collect();
+        assert_eq!(a.union(&b), [3, 300].into_iter().collect());
     }
 }

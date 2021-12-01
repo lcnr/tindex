@@ -34,7 +34,7 @@ impl<I: TIndex> Iterator for IndexIter<I> {
     type Item = I;
 
     fn next(&mut self) -> Option<I> {
-        self.inner.next().map(I::from)
+        self.inner.next().map(I::from_index)
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
@@ -45,7 +45,7 @@ impl<I: TIndex> Iterator for IndexIter<I> {
 impl<I: TIndex> DoubleEndedIterator for IndexIter<I> {
     #[inline]
     fn next_back(&mut self) -> Option<I> {
-        self.inner.next_back().map(I::from)
+        self.inner.next_back().map(I::from_index)
     }
 }
 

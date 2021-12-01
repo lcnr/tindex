@@ -1,8 +1,8 @@
 [package]
 name = "tindex"
-version = "0.3.1"
+version = "0.4.0"
 authors = ["lcnr/Bastian Kauschke <rust@lcnr.de>"]
 description = "`Vec`, slice and bitset with custom index types"
 repository = "https://github.com/lcnr/tindex"
 license = "MIT"
-edition = "2018"
+edition = "2021"

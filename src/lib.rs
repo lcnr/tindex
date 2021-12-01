@@ -19,13 +19,29 @@ pub use bitset::TBitSet;
 use iter::IndexIter;
 use slice_index::TSliceIndex;
 
-pub trait TIndex: From<usize> + PartialEq + Eq + PartialOrd + Ord + Clone + Copy {
-    fn as_index(&self) -> usize;
+pub trait TIndex: PartialEq + Eq + PartialOrd + Ord + Clone + Copy {
+    fn as_index(self) -> usize;
+
+    fn from_index(index: usize) -> Self;
 }
 
 impl TIndex for usize {
-    fn as_index(&self) -> usize {
-        *self
+    fn as_index(self) -> usize {
+        self
+    }
+
+    fn from_index(index: usize) -> Self {
+        index
+    }
+}
+
+impl TIndex for u32 {
+    fn as_index(self) -> usize {
+        self as usize
+    }
+
+    fn from_index(index: usize) -> Self {
+        index as u32
     }
 }
 
@@ -159,16 +175,16 @@ impl<I: TIndex, T> TSlice<I, T> {
         if self.inner.is_empty() {
             None
         } else {
-            Some((self.inner.len() - 1).into())
+            Some(I::from_index(self.inner.len() - 1))
         }
     }
 
     pub fn range_start(&self) -> I {
-        I::from(0)
+        I::from_index(0)
     }
 
     pub fn range_end(&self) -> I {
-        I::from(self.inner.len())
+        I::from_index(self.inner.len())
     }
 
     pub fn index_iter(&self) -> IndexIter<I> {
@@ -193,14 +209,20 @@ impl<I: TIndex, T> TSlice<I, T> {
     where
         T: Ord,
     {
-        self.inner.binary_search(x).map(I::from).map_err(I::from)
+        self.inner
+            .binary_search(x)
+            .map(I::from_index)
+            .map_err(I::from_index)
     }
 
     pub fn binary_search_by<'a, F>(&'a self, f: F) -> Result<I, I>
     where
         F: FnMut(&'a T) -> Ordering,
     {
-        self.inner.binary_search_by(f).map(I::from).map_err(I::from)
+        self.inner
+            .binary_search_by(f)
+            .map(I::from_index)
+            .map_err(I::from_index)
     }
 
     pub fn binary_search_by_key<'a, B, F>(&'a self, b: &B, f: F) -> Result<I, I>
@@ -210,8 +232,8 @@ impl<I: TIndex, T> TSlice<I, T> {
     {
         self.inner
             .binary_search_by_key(b, f)
-            .map(I::from)
-            .map_err(I::from)
+            .map(I::from_index)
+            .map_err(I::from_index)
     }
 }
 
@@ -394,7 +416,7 @@ impl<I: TIndex, T> TVec<I, T> {
     pub fn push(&mut self, item: T) -> I {
         let idx = self.inner.len();
         self.inner.push(item);
-        idx.into()
+        I::from_index(idx)
     }
 
     pub fn insert(&mut self, idx: I, elem: T) {
