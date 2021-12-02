@@ -113,6 +113,13 @@ impl<I> TBitSet<I> {
             .zip(&other.inner)
             .all(|(this, other)| (this | other) == this)
     }
+
+    pub fn intersect_with(&mut self, other: &TBitSet<I>) {
+        self.inner
+            .iter_mut()
+            .zip(other.inner.iter().copied().chain(iter::repeat(0)))
+            .for_each(|(s, o)| *s &= o)
+    }
 }
 
 impl<I: TIndex> TBitSet<I> {
@@ -168,16 +175,10 @@ impl<I: TIndex> TBitSet<I> {
         self.get_usize(idx.as_index())
     }
 
-    pub fn union(&self, other: &TBitSet<I>) -> TBitSet<I> {
-        TBitSet {
-            inner: self
-                .inner
-                .iter()
-                .zip(other.inner.iter())
-                .map(|(&l, &r)| l & r)
-                .collect(),
-            _marker: PhantomData,
-        }
+    pub fn intersection(&self, other: &TBitSet<I>) -> TBitSet<I> {
+        let mut v = self.clone();
+        v.intersect_with(other);
+        v
     }
 
     pub fn iter(&self) -> Iter<I, &Self> {
@@ -389,9 +390,9 @@ mod tests {
     }
 
     #[test]
-    fn union() {
+    fn intersect() {
         let a: TBitSet<usize> = [1, 3, 4, 100, 300, 1800].into_iter().collect();
         let b: TBitSet<_> = [3, 5, 99, 300].into_iter().collect();
-        assert_eq!(a.union(&b), [3, 300].into_iter().collect());
+        assert_eq!(a.intersection(&b), [3, 300].into_iter().collect());
     }
 }
