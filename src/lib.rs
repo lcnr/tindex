@@ -26,20 +26,24 @@ pub trait TIndex: PartialEq + Eq + PartialOrd + Ord + Clone + Copy {
 }
 
 impl TIndex for usize {
+    #[inline]
     fn as_index(self) -> usize {
         self
     }
 
+    #[inline]
     fn from_index(index: usize) -> Self {
         index
     }
 }
 
 impl TIndex for u32 {
+    #[inline]
     fn as_index(self) -> usize {
         self as usize
     }
 
+    #[inline]
     fn from_index(index: usize) -> Self {
         index as u32
     }

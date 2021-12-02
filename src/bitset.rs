@@ -171,6 +171,7 @@ impl<I: TIndex> TBitSet<I> {
             .map_or(false, |v| v & (1 << idx - frame_offset * FRAME_SIZE) != 0)
     }
 
+    #[inline]
     pub fn get(&self, idx: I) -> bool {
         self.get_usize(idx.as_index())
     }
