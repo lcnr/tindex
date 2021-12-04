@@ -123,7 +123,7 @@ impl<I> TBitSet<I> {
 }
 
 impl<I: TIndex> TBitSet<I> {
-    #[inline(always)]
+    #[inline]
     fn set_usize(&mut self, idx: usize, value: bool) {
         let frame_offset = idx / FRAME_SIZE;
         if frame_offset >= self.inner.len() {
@@ -142,7 +142,6 @@ impl<I: TIndex> TBitSet<I> {
         self.set_usize(idx.as_index(), value)
     }
 
-    #[inline]
     pub fn add(&mut self, idx: I) {
         self.set_usize(idx.as_index(), true)
     }
