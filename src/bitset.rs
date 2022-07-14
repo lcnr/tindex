@@ -247,6 +247,17 @@ impl<I: TIndex, B: Borrow<TBitSet<I>>> Iterator for Iter<I, B> {
     }
 }
 
+impl<I, B: Clone> Clone for Iter<I, B> {
+    fn clone(&self) -> Self {
+        Iter {
+            _marker: PhantomData,
+            inner: self.inner.clone(),
+            pos: self.pos,
+            end_pos: self.end_pos,
+        }
+    }
+}
+
 impl<I: TIndex, B: Borrow<TBitSet<I>>> DoubleEndedIterator for Iter<I, B> {
     fn next_back(&mut self) -> Option<I> {
         while self.end_pos > self.pos {
