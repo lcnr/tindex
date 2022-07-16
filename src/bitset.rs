@@ -120,6 +120,10 @@ impl<I> TBitSet<I> {
             .all(|(this, other)| (this | other) == this)
     }
 
+    pub fn intersects(&self, other: &TBitSet<I>) -> bool {
+        iter::zip(&self.inner, &other.inner).any(|(l, r)| l & r != 0)
+    }
+
     pub fn intersect_with(&mut self, other: &TBitSet<I>) {
         self.inner
             .iter_mut()
@@ -414,7 +418,12 @@ mod tests {
     #[test]
     fn intersect() {
         let a: TBitSet<usize> = [1, 3, 4, 100, 300, 1800].into_iter().collect();
-        let b: TBitSet<_> = [3, 5, 99, 300].into_iter().collect();
+        let mut b: TBitSet<_> = [3, 5, 99, 300].into_iter().collect();
+        assert_eq!(a.intersects(&b), true);
         assert_eq!(a.intersection(&b), [3, 300].into_iter().collect());
+
+        b.remove(3);
+        b.remove(300);
+        assert_eq!(a.intersects(&b), false);
     }
 }
