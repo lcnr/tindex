@@ -184,12 +184,7 @@ impl<I: TIndex> TBitSet<I> {
     }
 
     pub fn iter(&self) -> Iter<I, &Self> {
-        Iter {
-            _marker: PhantomData,
-            inner: self,
-            pos: 0,
-            end_pos: self.frame_count() * FRAME_SIZE,
-        }
+        Iter::new(self)
     }
 
     pub fn extend<U: IntoIterator<Item = I>>(&mut self, iter: U) {
@@ -215,22 +210,33 @@ impl<I: TIndex> IntoIterator for TBitSet<I> {
     type IntoIter = Iter<I, TBitSet<I>>;
 
     fn into_iter(self) -> Iter<I, TBitSet<I>> {
-        let end_pos = self.frame_count() * FRAME_SIZE;
-
-        Iter {
-            _marker: PhantomData,
-            inner: self,
-            pos: 0,
-            end_pos,
-        }
+        Iter::new(self)
     }
 }
 
 pub struct Iter<I, B> {
     _marker: PhantomData<fn(I)>,
-    inner: B,
+    bitset: B,
     pos: usize,
     end_pos: usize,
+}
+
+impl<I, B: Borrow<TBitSet<I>>> Iter<I, B> {
+    #[inline]
+    fn new(bitset: B) -> Self {
+        let b = bitset.borrow();
+        let pos = b.inner.first().map_or(0, |f| f.trailing_zeros() as usize);
+        let end_pos = b.frame_count().saturating_sub(1) * FRAME_SIZE
+            + b.inner
+                .last()
+                .map_or(0, |f| FRAME_SIZE - f.leading_zeros() as usize);
+        Iter {
+            _marker: PhantomData,
+            bitset,
+            pos,
+            end_pos,
+        }
+    }
 }
 
 impl<I: TIndex, B: Borrow<TBitSet<I>>> Iterator for Iter<I, B> {
@@ -241,7 +247,7 @@ impl<I: TIndex, B: Borrow<TBitSet<I>>> Iterator for Iter<I, B> {
         while self.pos <= self.end_pos {
             let pos = self.pos;
             self.pos += 1;
-            if self.inner.borrow().get_usize(pos) {
+            if self.bitset.borrow().get_usize(pos) {
                 return Some(I::from_index(pos.into()));
             }
         }
@@ -253,7 +259,7 @@ impl<I, B: Clone> Clone for Iter<I, B> {
     fn clone(&self) -> Self {
         Iter {
             _marker: PhantomData,
-            inner: self.inner.clone(),
+            bitset: self.bitset.clone(),
             pos: self.pos,
             end_pos: self.end_pos,
         }
@@ -265,14 +271,14 @@ impl<I: TIndex, B: Borrow<TBitSet<I>>> DoubleEndedIterator for Iter<I, B> {
         while self.end_pos > self.pos {
             let pos = self.end_pos;
             self.end_pos -= 1;
-            if self.inner.borrow().get_usize(pos) {
+            if self.bitset.borrow().get_usize(pos) {
                 return Some(I::from_index(pos));
             }
         }
 
         if self.end_pos == self.pos {
             self.pos += 1;
-            if self.inner.borrow().get_usize(self.end_pos) {
+            if self.bitset.borrow().get_usize(self.end_pos) {
                 return Some(I::from_index(self.end_pos));
             }
         }
