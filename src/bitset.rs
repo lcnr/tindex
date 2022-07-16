@@ -93,6 +93,7 @@ impl<I> TBitSet<I> {
         self.inner.clear()
     }
 
+    #[inline]
     pub fn element_count(&self) -> usize {
         self.inner
             .iter()
@@ -120,9 +121,7 @@ impl<I> TBitSet<I> {
             .zip(other.inner.iter().copied().chain(iter::repeat(0)))
             .for_each(|(s, o)| *s &= o)
     }
-}
 
-impl<I: TIndex> TBitSet<I> {
     #[inline]
     fn set_usize(&mut self, idx: usize, value: bool) {
         let frame_offset = idx / FRAME_SIZE;
@@ -137,7 +136,9 @@ impl<I: TIndex> TBitSet<I> {
             self.inner[frame_offset] &= !(1 << idx - frame_offset * FRAME_SIZE);
         }
     }
+}
 
+impl<I: TIndex> TBitSet<I> {
     pub fn set(&mut self, idx: I, value: bool) {
         self.set_usize(idx.as_index(), value)
     }
@@ -235,6 +236,7 @@ pub struct Iter<I, B> {
 impl<I: TIndex, B: Borrow<TBitSet<I>>> Iterator for Iter<I, B> {
     type Item = I;
 
+    #[inline]
     fn next(&mut self) -> Option<I> {
         while self.pos <= self.end_pos {
             let pos = self.pos;
