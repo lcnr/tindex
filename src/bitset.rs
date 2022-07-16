@@ -107,10 +107,15 @@ impl<I> TBitSet<I> {
     }
 
     pub fn contains(&self, other: &TBitSet<I>) -> bool {
+        for &f in other.inner.iter().skip(self.frame_count()) {
+            if f != 0 {
+                return false;
+            }
+        }
+
         self.inner
             .iter()
             .copied()
-            .chain(iter::repeat(0))
             .zip(&other.inner)
             .all(|(this, other)| (this | other) == this)
     }
@@ -120,6 +125,17 @@ impl<I> TBitSet<I> {
             .iter_mut()
             .zip(other.inner.iter().copied().chain(iter::repeat(0)))
             .for_each(|(s, o)| *s &= o)
+    }
+
+    pub fn intersection(&self, other: &TBitSet<I>) -> TBitSet<I> {
+        let (a, b) = if self.frame_count() < other.frame_count() {
+            (self, other)
+        } else {
+            (other, self)
+        };
+        let mut v = a.clone();
+        v.intersect_with(b);
+        v
     }
 
     #[inline]
@@ -175,12 +191,6 @@ impl<I: TIndex> TBitSet<I> {
     #[inline]
     pub fn get(&self, idx: I) -> bool {
         self.get_usize(idx.as_index())
-    }
-
-    pub fn intersection(&self, other: &TBitSet<I>) -> TBitSet<I> {
-        let mut v = self.clone();
-        v.intersect_with(other);
-        v
     }
 
     pub fn iter(&self) -> Iter<I, &Self> {
@@ -244,7 +254,7 @@ impl<I: TIndex, B: Borrow<TBitSet<I>>> Iterator for Iter<I, B> {
 
     #[inline]
     fn next(&mut self) -> Option<I> {
-        while self.pos <= self.end_pos {
+        while self.pos < self.end_pos {
             let pos = self.pos;
             self.pos += 1;
             if self.bitset.borrow().get_usize(pos) {
@@ -269,15 +279,7 @@ impl<I, B: Clone> Clone for Iter<I, B> {
 impl<I: TIndex, B: Borrow<TBitSet<I>>> DoubleEndedIterator for Iter<I, B> {
     fn next_back(&mut self) -> Option<I> {
         while self.end_pos > self.pos {
-            let pos = self.end_pos;
             self.end_pos -= 1;
-            if self.bitset.borrow().get_usize(pos) {
-                return Some(I::from_index(pos));
-            }
-        }
-
-        if self.end_pos == self.pos {
-            self.pos += 1;
             if self.bitset.borrow().get_usize(self.end_pos) {
                 return Some(I::from_index(self.end_pos));
             }
